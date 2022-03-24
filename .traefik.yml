@@ -2,7 +2,7 @@ displayName: Rawdata Provider
 summary: Traefik Provider plugin to import /api/rawdata from another Traefik instance
 
 type: provider
-import: github.com/beanow/traefik-plugin-rawdata
+import: github.com/Beanow/traefik-plugin-rawdata
 
 testData:
   pollInterval: 5s
