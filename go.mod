@@ -1,4 +1,4 @@
-module github.com/traefik/pluginproviderdemo
+module github.com/beanow/traefik-plugin-rawdata
 
 go 1.16
 

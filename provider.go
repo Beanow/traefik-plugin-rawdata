@@ -45,7 +45,7 @@ type Provider struct {
 	client *http.Client
 }
 
-type RunTimeRepresentation struct {
+type runTimeRepresentation struct {
 	Routers        map[string]*dynamic.Router        `json:"routers,omitempty"`
 	Middlewares    map[string]*dynamic.Middleware    `json:"middlewares,omitempty"`
 	Services       map[string]*dynamic.Service       `json:"services,omitempty"`
@@ -145,7 +145,7 @@ func (p *Provider) pollEndpoint() (*dynamic.Configuration, error) {
 		return nil, fmt.Errorf("error: %d: %s", resp.StatusCode, string(data))
 	}
 
-	var runtime *RunTimeRepresentation
+	var runtime *runTimeRepresentation
 	err = json.Unmarshal(data, &runtime)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshall response: %w", err)
@@ -164,7 +164,8 @@ func (p *Provider) strippedKey(key string) string {
 	return key
 }
 
-func (p *Provider) filteredConfig(runtime *RunTimeRepresentation) (*dynamic.Configuration, error) {
+// nolint: gocyclo
+func (p *Provider) filteredConfig(runtime *runTimeRepresentation) (*dynamic.Configuration, error) {
 	conf := &dynamic.Configuration{
 		HTTP: &dynamic.HTTPConfiguration{
 			Routers:     make(map[string]*dynamic.Router),

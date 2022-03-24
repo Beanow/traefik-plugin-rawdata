@@ -18,3 +18,11 @@ vendor:
 
 clean:
 	rm -rf ./vendor
+
+tools: install-golangci install-yaegi
+
+install-golangci:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.42.1
+
+install-yaegi:
+	go install github.com/traefik/yaegi/cmd/yaegi@v0.10.0
