@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+  primary:
+    image: traefik:2.6
+    command:
+      - --log.level=INFO
+      - --accesslog=true
+      - --api.insecure=false
+      - --api.dashboard=true
+      - --entrypoints.web.address=:80
+      # Import from secondary via plugin
+      - --experimental.localPlugins.rawdata.moduleName=github.com/beanow/traefik-plugin-rawdata
+      - --providers.plugin.rawdata.pollInterval=3s
+      - --providers.plugin.rawdata.namespace=docker
+      - --providers.plugin.rawdata.stripNamespace=true
+      - --providers.plugin.rawdata.endpoint=http://secondary.traefik:8080/api/rawdata
+    ports:
+      - 80:80
+    networks:
+      # A non-internal netork is necessary to publish ports.
+      - default
+      - traefik
+    volumes:
+      - ./:/plugins-local/src/github.com/beanow/traefik-plugin-rawdata
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.traefik-primary.rule: Host(`primary.localhost`)
+      traefik.http.routers.traefik-primary.service: api@internal
+
+  secondary:
+    image: traefik:2.6
+    command:
+      - --log.level=INFO
+      - --accesslog=true
+      # Provides traefik endpoint on :8080
+      - --api.insecure=true
+      - --api.dashboard=true
+      # While we don't publish this, it's conventient to match the primary's endpoint names.
+      # This way containers that don't explicitly specify endpoints have the same defaults.
+      - --entrypoints.web.address=:80
+      # Responsible for discovering Docker services
+      - --providers.docker
+      - --providers.docker.watch=true
+      - --providers.docker.swarmmode=false
+      - --providers.docker.network=traefik
+      - --providers.docker.exposedByDefault=false
+    networks:
+      - traefik
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      # Because "api@internal" would be the primary's @internal, we should create a regular service here.
+      traefik.enable: "true"
+      traefik.http.routers.traefik-secondary.rule: Host(`secondary.localhost`)
+      traefik.http.services.traefik-secondary.loadbalancer.server.port: 8080
+
+networks:
+  default:
+  traefik:
+    name: traefik
+    internal: true
+    attachable: true
+    # If you're mixing Docker and Docker Swarm
+    # driver: overlay
